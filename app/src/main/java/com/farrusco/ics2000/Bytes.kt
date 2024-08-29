@@ -1,4 +1,3 @@
-package com.chaquo.myapplication
 
 import kotlin.math.pow
 
