@@ -1,4 +1,3 @@
-package com.farrusco.ics2000
 
 import android.util.Log
 import com.google.gson.Gson
