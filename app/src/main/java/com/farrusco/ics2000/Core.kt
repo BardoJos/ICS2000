@@ -1,4 +1,4 @@
-
+package com.farrusco.ics2000
 
 import android.util.Log
 import com.google.gson.Gson
@@ -75,7 +75,7 @@ class Core {
 
     fun sendCommand(command: String) {
         val url = "$baseUrl/command.php"
-        val params = getParams("add") + "&device_unique_id=$homeId&command=$command"
+        val params = getParams("add") + "&device_unique_id=android&command=$command"
         val req = URL("$url?$params").openConnection() as HttpURLConnection
     }
 
@@ -125,72 +125,26 @@ class Core {
 
         if (arr.size == 4) {
             try {
-                val dcrpt = Crypto.decrypt(arr[3].toString(), aes!!)
-                if (JsonObject().getAsJsonObject(dcrpt).has("module")) {
-                    val module = JsonObject().getAsJsonObject(dcrpt)["module"]
-                    if (JsonObject().getAsJsonObject(module.toString()).has("functions")) {
-                        val functions = JsonObject().getAsJsonObject(module.toString())["functions"]
-                        return functions.toString().toList()
-                    }
-                    //return dcrpt.getJSONObject("module").getJSONArray("functions").toList()
-                }
+                val dcrpt = Crypto.decrypt(arr[3].asString, aes!!)
+                if (JsonParser.parseString(dcrpt).asJsonObject.has("module")) {
+                    return JsonParser.parseString(dcrpt).asJsonObject["module"].asJsonObject["functions"].asString.toList()
+                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
         return emptyList()
     }
-    /*
-
-inner class YourClassName {
-    private val baseUrl = "your_base_url"
-    private lateinit var _email: String
-    private lateinit var mac: String
-    private lateinit var _password: String
-    private lateinit var _homeId: String
-    private lateinit var aes: Any // Replace with actual type
-    private val commandList = mutableListOf<Command>()
-
-
-    fun getDeviceCheck(entity: Int): List<Any> {
-        val url = "$baseUrl/entity.php"
-        val params = mapOf(
-            "action" to "check",
-            "email" to _email,
-            "mac" to mac.replace(":", ""),
-            "password_hash" to _password,
-            "entity_id" to entity.toString()
-        )
-        val resp = khttp.get(url, params = params)
-        val arr = JSONObject(resp.text).toList()
-        if (arr.size == 4) {
-            try {
-                val dcrpt = JSONObject(decrypt(arr[3] as String, aes))
-                if (dcrpt.has("module") && dcrpt.getJSONObject("module").has("functions")) {
-                    return dcrpt.getJSONObject("module").getJSONArray("functions").toList()
-                }
-            } catch (e: TypeError) {
-                // Handle TypeError
-            } catch (e: JSONException) {
-                // Handle JSONDecodeError
-            }
-        }
-        return emptyList()
-    }
-
-}
-*/
 
     fun simpleCmd(entity: Int, function: Int, value: Int): Command {
         val cmd = Command()
-        cmd.setMac(mac)
+        cmd.setFrame(1)
         cmd.setType(128)
+        cmd.setMac(mac)
         cmd.setMagic()
         cmd.setEntityId(entity)
-        cmd.setData(
-            "{\"module\":{\"id\":${entity},\"function\":${function},\"value\":${value}}}".toByteArray(),
-            aes!!
-        )
+        val data = "{\"module\":{\"id\":${entity},\"function\":${function},\"value\":${value}}}"
+        cmd.setData(data, aes!! )
         return cmd
     }
 
@@ -284,5 +238,3 @@ inner class YourClassName {
         WEATHER_MODULE(244)
     }
 }
-
-
