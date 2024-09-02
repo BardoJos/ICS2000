@@ -6,12 +6,7 @@ import javax.crypto.spec.SecretKeySpec
 
 object Crypto {
 
-    private val blockSize = 16
-
-    fun pad(s: String): String {
-        val padding = blockSize - s.length % blockSize
-        return s + (padding.toChar().toString().repeat(padding))
-    }
+    const val blockSize = 16
 
     fun decrypt(string: String, aes: String): String {
         val base = Base64.getDecoder().decode(string)
@@ -23,17 +18,21 @@ object Crypto {
         return String(cipher.doFinal(inp))
     }
 
-    fun encrypt(string: String, aes: String): ByteArray {
-        val base = pad(string).toByteArray()
+    fun encrypt(string: String, aes: String): String {
+
+        val padding = blockSize - string.length % blockSize
+        val base = (string + (padding.toChar().toString().repeat(0))).toByteArray()
+
         val iv = ByteArray(16)
         val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
         val secretKey = SecretKeySpec(aes.hexToByteArray(), "AES")
+
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, IvParameterSpec(iv))
-        return iv + cipher.doFinal(base)
+        return Bytes.byteArrayToHex(iv ) + Bytes.byteArrayToHex( cipher.doFinal(base))
+
     }
 
     fun String.hexToByteArray(): ByteArray {
         return this.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
     }
-
 }
